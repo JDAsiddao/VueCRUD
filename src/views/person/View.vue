@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import axios from "axios";
+import Swal from 'sweetalert2';
 
 const persons = ref([]);
 
@@ -14,6 +15,37 @@ onMounted(() => {
       console.error("Error fetching data:", error);
     });
 });
+
+const deleteRecord = (personId) => {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      axios
+        .post(`http://localhost/demovuecrud/backend/personapi.php?id=${personId.value}`, {
+          action: 'delete',
+          id: personId
+        })
+        .then((response) => {
+          Swal.fire('Deleted!', 'Your record has been deleted.', 'success').then(() => {
+            window.location.reload();
+          });
+        })
+        .catch((error) => {
+          Swal.fire('Error', 'Error deleting record.', 'error');
+          console.error('Error deleting record:', error);
+        });
+    }
+  });
+};
+
+
 </script>
 
 <template>
@@ -25,11 +57,11 @@ onMounted(() => {
         <tr>
           <th scope="col">#</th>
           <th scope="col">id</th>
-          <th scope="col">lastName</th>
-          <th scope="col">firstName</th>
+          <th scope="col">First Name</th>
+          <th scope="col">Last Name</th>
           <th scope="col">email</th>
-          <th scope="col">isdeleted</th>
-          <th scope="col">actions</th>
+          <th scope="col">isDeleted</th>
+          <th scope="col">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -39,13 +71,16 @@ onMounted(() => {
           <td>{{ person.lastName }}</td>
           <td>{{ person.firstName }}</td>
           <td>{{ person.email }}</td>
-          <td>{{ person.isdeleted }}</td>
+          <td>{{ person.isDeleted }}</td>
           <td>
-            <button class="btn btn-primary">edit</button>
-            <button class="btn btn-danger">delete</button>
+            <router-link :to="{ path: '/person/update/' + person.id }" class="btn btn-primary">edit</router-link>
+            <span style="margin-left: 10px;"></span> 
+            <button class="btn btn-danger" @click="deleteRecord(person.id)">delete</button>
           </td>
+
         </tr>
       </tbody>
     </table>
   </div>
 </template>
+

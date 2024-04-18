@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const lastName = ref("");
 const firstName = ref("");
@@ -11,19 +12,29 @@ const saveRecord = () => {
     action: "create",
     lastName: lastName.value,
     firstName: firstName.value,
-    email: email.value,
+    email: email.value
   };
   axios
     .post("http://localhost/demovuecrud/backend/personapi.php", newRecord)
     .then((response) => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Record saved successfully!'
+      });
       console.log("Record saved successfully:", response.data);
-      console.log(newRecord);
     })
     .catch((error) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error saving record. Please try again.'
+      });
       console.error("Error saving record:", error);
     });
 };
 </script>
+
 
 <template>
   <div class="container mt-4">
@@ -32,10 +43,6 @@ const saveRecord = () => {
         <h4>Add Person</h4>
       </div>
       <div class="card-body">
-        <div class="form-group">
-          <label for="id">ID :</label><br />
-          <input type="text" id="id" class="form-control" v-model="id" />
-        </div>
         <div class="form-group">
           <label for="lastName">Last Name :</label><br />
           <input
