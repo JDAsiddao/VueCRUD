@@ -23,6 +23,7 @@
   onBeforeUnmount(() => {
     localStorage.removeItem('username');
     router.push('/user/login');
+    location.reload();
   });
   </script>
   
