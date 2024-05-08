@@ -13,13 +13,21 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 ## Project Setup
 
 ```sh
-npm install
+npm install bootstrap
+npm install @popperjs/core
+npm install axios
 ```
 
-### Compile and Hot-Reload for Development
+### DB Install
 
 ```sh
-npm run dev
+CREATE TABLE customers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+);
 ```
 
 ### Compile and Minify for Production
