@@ -7,70 +7,46 @@ header("Access-Control-Allow-Headers: Content-Type");
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (isset($_GET['action'])) {
-        if ($_GET['action'] === 'get_all') {
-            // Fetch all records
-            $stmt = $conn->prepare("SELECT * FROM tblperson");
-            $stmt->execute();
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode($rows);
-        } else if ($_GET['action'] === 'get_by_id') {
-            // Fetch a specific record by ID
-            $id = $_GET['id'];
-            $stmt = $conn->prepare("SELECT * FROM tblperson WHERE id = ?");
-            $stmt->execute([$id]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            echo json_encode($row);
-        } else {
-            echo json_encode(array("error" => "Unknown action"));
-        }
-    }
+
 } else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
 
-    if ($data['action'] === 'create') {
-        // Create new record
+    if ($data['action'] === 'register') {
+        // Register new user with username, email, and password
         try {
             $lastname = $data['lastName'];
             $firstname = $data['firstName'];
+            $username = $data['username'];
             $email = $data['email'];
+            $password = password_hash($data['password'], PASSWORD_DEFAULT); 
 
-            $stmt = $conn->prepare("INSERT INTO tblperson (lastName, firstName, email) VALUES (?, ?, ?)");
-            $stmt->execute([$lastname, $firstname, $email]);
+            $stmt = $conn->prepare("INSERT INTO customers (lastName, firstName, username, email, password) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$lastname, $firstname, $username, $email, $password]);
 
-            echo json_encode(array("message" => "Record created successfully"));
+            echo json_encode(array("message" => "Registration successful"));
         } catch (PDOException $e) {
-            echo json_encode(array("error" => "Error creating record: " . $e->getMessage()));
+            echo json_encode(array("error" => "Error registering user: " . $e->getMessage()));
         }
-    } else if ($data['action'] === 'update' && isset($data['id'])) {
-        // Update existing record
-        try {
-            $id = $data['id'];
-            $lastname = $data['lastName'];
-            $firstname = $data['firstName'];
-            $email = $data['email'];
-            echo json_encode(array("firstName" => $firstname));
-            $stmt = $conn->prepare("UPDATE tblperson SET lastName = ?, firstName = ?, email = ? WHERE id = ?");
-            $stmt->execute([$lastname, $firstname, $email, $id]);
+    } else if ($data['action'] === 'login') { // Added action check for login
+        $username = $data['username'];
+        $password = $data['password'];
 
-            echo json_encode(array("message" => "Record updated successfully"));
-            
-        } catch (PDOException $e) {
-            echo json_encode(array("error" => "Error updating record: " . $e->getMessage()));
-        }
-    } else if ($data['action'] === 'delete' && isset($data['id'])) {
-        // Delete record
-        try {
-            $id = $data['id'];
-            $stmt = $conn->prepare("DELETE FROM tblperson WHERE id = ?");
-            $stmt->execute([$id]);
+        // Fetch user data from the database based on username
+        $stmt = $conn->prepare("SELECT * FROM customers WHERE username = ?");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            echo json_encode(array("message" => "Record deleted successfully"));
-        } catch (PDOException $e) {
-            echo json_encode(array("error" => "Error deleting record: " . $e->getMessage()));
+        if ($user && password_verify($password, $user['password'])) {
+            // Login successful
+            $_SESSION['username'] = $username;
+            echo json_encode(array("message" => "Login successful"));
+        } else {
+            // Invalid credentials
+            http_response_code(401);
+            echo json_encode(array("error" => "Invalid username or password"));
         }
     } else {
-        echo json_encode(array("error" => "Invalid action or missing ID"));
+        echo json_encode(array("error" => "Invalid action"));
     }
 }
 
